@@ -1,0 +1,155 @@
+[build-system]
+requires = ["setuptools>=61.0.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "bingx-trading-bot"
+version = "1.0.0"
+description = "Advanced trading bot for BingX exchange with machine learning and risk management"
+readme = "README.md"
+authors = [
+    { name = "Trading Bot Team", email = "dev@tradingbot.com" }
+]
+license = { file = "LICENSE" }
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Financial and Insurance Industry",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Office/Business :: Financial :: Investment",
+    "Framework :: AsyncIO",
+    "Framework :: Flask",
+]
+keywords = ["trading", "bot", "bingx", "crypto", "machine-learning"]
+requires-python = ">=3.9"
+dependencies = [
+    "aiohttp==3.8.1",
+    "asyncio==3.4.3",
+    "backoff==2.1.0",
+    "cryptography==36.0.0",
+    "Flask==2.1.1",
+    "Jinja2==3.1.1",
+    "joblib==1.1.0",
+    "numpy==1.22.3",
+    "pandas==1.4.2",
+    "prometheus-client==0.14.1",
+    "psutil==5.9.0",
+    "python-dotenv==0.19.2",
+    "requests==2.27.1",
+    "schedule==1.1.0",
+    "scikit-learn==1.0.2",
+    "SQLAlchemy==1.4.36",
+    "redis==4.3.4",
+    "textblob==0.17.1",
+    "Werkzeug==2.1.1",
+    "gunicorn==20.1.0",
+    "ta-lib==0.4.0; platform_system != 'Windows'",
+    "python-binance==1.0.16",
+    "ccxt==2.6.86",
+    "plotly==5.9.0",
+    "dash==2.6.0",
+    "dash-bootstrap-components==1.2.1",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest==7.1.2",
+    "pytest-asyncio==0.18.3",
+    "pytest-cov==3.0.0",
+    "black==22.6.0",
+    "isort==5.10.1",
+    "flake8==4.0.1",
+    "mypy==0.971",
+    "pre-commit==2.20.0",
+    "tox==3.25.1",
+    "sphinx==5.0.2",
+    "sphinx-rtd-theme==1.0.0",
+]
+ml = [
+    "tensorflow==2.9.1",
+    "torch==1.12.1",
+    "xgboost==1.6.1",
+    "lightgbm==3.3.2",
+    "optuna==3.0.5",
+]
+monitoring = [
+    "prometheus-client==0.14.1",
+    "grafana-client==3.0.1",
+]
+
+[project.urls]
+Homepage = "https://github.com/your-username/bingx-trading-bot"
+Documentation = "https://github.com/your-username/bingx-trading-bot/docs"
+Repository = "https://github.com/your-username/bingx-trading-bot"
+Changelog = "https://github.com/your-username/bingx-trading-bot/releases"
+Issues = "https://github.com/your-username/bingx-trading-bot/issues"
+
+[tool.setuptools]
+packages = ["src", "src.bot", "src.data", "src.web", "src.utils"]
+
+[tool.setuptools.package-dir]
+src = "src"
+
+[tool.black]
+line-length = 88
+target-version = ['py39']
+include = '\.pyi?$'
+exclude = '''
+/(
+    \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | _build
+  | build
+  | dist
+)/
+'''
+
+[tool.isort]
+profile = "black"
+multi_line_output = 3
+include_trailing_comma = true
+force_grid_wrap = 0
+use_parentheses = true
+line_length = 88
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+addopts = "--cov=src --cov-report=html --cov-report=term-missing -v"
+
+[tool.mypy]
+python_version = "3.9"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+check_untyped_defs = true
+ignore_missing_imports = true
+
+[tool.coverage.run]
+source = ["src"]
+omit = ["src/__init__.py", "src/utils/__init__.py"]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+]
+
+[tool.tox]
+legacy_tox_ini = """
+[tox]
+envlist = py39, py310, py311
+
+[testenv]
+deps =
+    pytest
+    pytest-cov
+commands =
+    pytest tests/ --cov=src --cov-report=html --cov-report=term-missing -v
+"""

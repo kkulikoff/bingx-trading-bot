@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings - BingX Trading Bot</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #34495e;
+            --accent-color: #3498db;
+            --success-color: #27ae60;
+            --warning-color: #f39c12;
+            --danger-color: #e74c3c;
+            --text-color: #ecf0f1;
+            --background-color: #1e272e;
+            --card-background: #2c3e50;
+            --border-color: #34495e;
+        }
+
+        .settings-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .settings-header {
+            background-color: var(--card-background);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .settings-tabs {
+            display: flex;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 20px;
+        }
+
+        .tab-button {
+            padding: 10px 20px;
+            background: none;
+            border: none;
+            color: var(--text-color);
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .tab-button.active {
+            border-bottom: 2px solid var(--accent-color);
+            color: var(--accent-color);
+        }
+
+        .tab-button:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .settings-card {
+            background-color: var(--card-background);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .settings-group {
+            margin-bottom: 25px;
+        }
+
+        .settings-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #95a5a6;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            background-color: rgba(255, 255, 255, 0.1);
+            color: var(--text-color);
+            box-sizing: border-box;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--accent-color);
+        }
+
+        .form-textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            background-color: rgba(255, 255, 255, 0.1);
+            color: var(--text-color);
+            resize: vertical;
+            min-height: 100px;
+            box-sizing: border-box;
+        }
+
+        .form-select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            background-color: rgba(255, 255, 255, 0.1);
+            color: var(--text-color);
+            box-sizing: border-box;
+        }
+
+        .form-checkbox {
+            margin-right: 10px;
+        }
+
+        .form-help {
+            font-size: 12px;
+            color: #95a5a6;
+            margin-top: 5px;
+        }
+
+        .btn {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-right: 10px;
+            transition: background-color 0.3s ease;
+        }
+
+        .btn-primary {
+            background-color: var(--accent-color);
+            color: white;
+        }
+
+        .btn-success {
+            background-color: var(--success-color);
+            color: white;
+        }
+
+        .btn-danger {
+            background-color: var(--danger-color);
+            color: white;
+        }
+
+        .btn-warning {
+            background-color: var(--warning-color);
+            color: white;
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+        }
+
+        .action-buttons {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border-color);
+            text-align: right;
+        }
+
+        .status-message {
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            display: none;
+        }
+
+        .status-success {
+            background-color: rgba(39, 174, 96, 0.2);
+            border: 1px solid var(--success-color);
+            color: var(--success-color);
+        }
+
+        .status-error {
+            background-color: rgba(231, 76, 60, 0.2);
+            border: 1px solid var(--danger-color);
+            color: var(--danger-color);
+        }
+
+        .status-warning {
+            background-color: rgba(243, 156, 18, 0.2);
+            border: 1px solid var(--warning-color);
+            color: var(--warning-color);
+        }
+
+        .symbols-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .symbol-tag {
+            background-color: var(--secondary-color);
+            padding: 5px 10px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+        }
+
+        .symbol-tag-remove {
+            margin-left: 5px;
+            cursor: pointer;
+            color: var(--danger-color);
+            font-weight: bold;
+        }
+
+        .api-key-masked {
+            font-family: monospace;
+            letter-spacing: 1px;
+        }
+
+        .danger-zone {
+            border: 1px solid var(--danger-color);
+            background-color: rgba(231, 76, 60, 0.1);
+        }
+
+        .danger-zone .settings-title {
+            color: var(--danger-color);
+        }
+
+        @media (max-width: 768px) {
+            .settings-tabs {
+                flex-wrap: wrap;
+            }
+            
+            .tab-button {
+                flex: 1;
+                min-width: 120px;
+                text-align: center;
+            }
+            
+            .action-buttons {
+                text-align: center;
+            }
+            
+            .btn {
+                margin-bottom: 10px;
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    {% extends "base.html" %}
+
+    {% block content %}
+    <div class="settings-container">
+        <div class="settings-header">
+            <h1>Bot Settings</h1>
+            <p>Configure your trading bot parameters and preferences</p>
+        </div>
+
+        <div class="settings-tabs">
+            <button class="tab-button active" data-tab="general">General</button>
+            <button class="tab-button" data-tab="trading">Trading</button>
+            <button class="tab-button" data-tab="api">API Keys</button>
+            <button class="tab-button" data-tab="notifications">Notifications</button>
+            <button class="tab-button" data-tab="advanced">Advanced</button>
+        </div>
+
+        <div id="status-message" class="status-message"></div>
+
+        <form id="settings-form">
+            <!-- General Settings Tab -->
+            <div class="tab-content active" id="general-tab">
+                <div class="settings-card">
+                    <div class="settings-title">Basic Configuration</div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Bot Name</label>
+                        <input type="text" class="form-input" name="bot_name" value="BingX Trading Bot">
+                        <div class="form-help">A descriptive name for your trading bot instance</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Environment</label>
+                        <select class="form-select" name="environment">
+                            <option value="production">Production</option>
+                            <option value="development">Development</option>
+                            <option value="testing">Testing</option>
+                        </select>
+                        <div class="form-help">Set the operating environment for the bot</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Log Level</label>
+                        <select class="form-select" name="log_level">
+                            <option value="DEBUG">DEBUG</option>
+                            <option value="INFO" selected>INFO</option>
+                            <option value="WARNING">WARNING</option>
+                            <option value="ERROR">ERROR</option>
+                            <option value="CRITICAL">CRITICAL</option>
+                        </select>
+                        <div class="form-help">Set the verbosity of logging output</div>
+                    </div>
+                </div>
+                
+                <div class="settings-card">
+                    <div class="settings-title">Symbols & Timeframes</div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Trading Symbols</label>
+                        <div class="symbols-list" id="symbols-list">
+                            <div class="symbol-tag">BTC-USDT<span class="symbol-tag-remove">×</span></div>
+                            <div class="symbol-tag">ETH-USDT<span class="symbol-tag-remove">×</span></div>
+                            <div class="symbol-tag">SOL-USDT<span class="symbol-tag-remove">×</span></div>
+                        </div>
+                        <input type="text" class="form-input" id="new-symbol" placeholder="Add new symbol (e.g., XRP-USDT)">
+                        <button type="button" class="btn btn-primary" id="add-symbol" style="margin-top: 10px;">Add Symbol</button>
+                        <div class="form-help">Trading pairs to monitor and trade (comma-separated)</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Timeframes</label>
+                        <div class="symbols-list" id="timeframes-list">
+                            <div class="symbol-tag">15m<span class="symbol-tag-remove">×</span></div>
+                            <div class="symbol-tag">1h<span class="symbol-tag-remove">×</span></div>
+                            <div class="symbol-tag">4h<span class="symbol-tag-remove">×</span></div>
+                        </div>
+                        <input type="text" class="form-input" id="new-timeframe" placeholder="Add new timeframe (e.g., 1d)">
+                        <button type="button" class="btn btn-primary" id="add-timeframe" style="margin-top: 10px;">Add Timeframe</button>
+                        <div class="form-help">Timeframes to analyze for trading signals</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Trading Settings Tab -->
+            <div class="tab-content" id="trading-tab">
+                <div class="settings-card">
+                    <div class="settings-title">Risk Management</div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Initial Balance (USDT)</label>
+                        <input type="number" class="form-input" name="initial_balance" value="10000" step="100" min="100">
+                        <div class="form-help">Starting balance for the trading bot</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Risk Per Trade (%)</label>
+                        <input type="number" class="form-input" name="risk_per_trade" value="2.0" step="0.1" min="0.1" max="10">
+                        <div class="form-help">Percentage of portfolio to risk on each trade (0.1-10%)</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Maximum Position Size (%)</label>
+                        <input type="number" class="form-input" name="max_position_size" value="10.0" step="1" min="1" max="50">
+                        <div class="form-help">Maximum percentage of portfolio for a single position</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Minimum Confidence Level</label>
+                        <input type="number" class="form-input" name="min_confidence" value="0.7" step="0.05" min="0.5" max="1.0">
+                        <div class="form-help">Minimum confidence level required to execute a trade (0.5-1.0)</div>
+                    </div>
+                </div>
+                
+                <div class="settings-card">
+                    <div class="settings-title">Trading Strategy</div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Strategy Mode</label>
+                        <select class="form-select" name="strategy_mode">
+                            <option value="conservative">Conservative</option>
+                            <option value="moderate" selected>Moderate</option>
+                            <option value="aggressive">Aggressive</option>
+                            <option value="custom">Custom</option>
+                        </select>
+                        <div class="form-help">Overall trading strategy approach</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Enable Short Trading</label>
+                        <input type="checkbox" class="form-checkbox" name="enable_short" checked>
+                        <div class="form-help">Allow the bot to execute short (sell) positions</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Max Open Trades</label>
+                        <input type="number" class="form-input" name="max_open_trades" value="5" min="1" max="20">
+                        <div class="form-help">Maximum number of simultaneous open trades</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Stop-Loss Strategy</label>
+                        <select class="form-select" name="stop_loss_strategy">
+                            <option value="atr">ATR-based (Recommended)</option>
+                            <option value="percentage">Percentage-based</option>
+                            <option value="support">Support/Resistance</option>
+                        </select>
+                        <div class="form-help">Method for calculating stop-loss levels</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- API Keys Tab -->
+            <div class="tab-content" id="api-tab">
+                <div class="settings-card">
+                    <div class="settings-title">Exchange API Configuration</div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">BingX API Key</label>
+                        <input type="password" class="form-input" name="bingx_api_key" placeholder="Enter your BingX API Key">
+                        <div class="form-help">Your BingX exchange API key</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">BingX Secret Key</label>
+                        <input type="password" class="form-input" name="bingx_secret_key" placeholder="Enter your BingX Secret Key">
+                        <div class="form-help">Your BingX exchange secret key</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">API Rate Limit (requests/min)</label>
+                        <input type="number" class="form-input" name="api_rate_limit" value="120" min="10" max="300">
+                        <div class="form-help">Maximum API requests per minute to avoid rate limiting</div>
+                    </div>
+                </div>
+                
+                <div class="settings-card">
+                    <div class="settings-title">External APIs</div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">News API Key</label>
+                        <input type="password" class="form-input" name="news_api_key" placeholder="Enter your News API Key">
+                        <div class="form-help">API key for news sentiment analysis (optional)</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Alpha Vantage API Key</label>
+                        <input type="password" class="form-input" name="alpha_vantage_key" placeholder="Enter your Alpha Vantage API Key">
+                        <div class="form-help">API key for fundamental data (optional)</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Notifications Tab -->
+            <div class="tab-content" id="notifications-tab">
+                <div class="settings-card">
+                    <div class="settings-title">Telegram Notifications</div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Enable Telegram Notifications</label>
+                        <input type="checkbox" class="form-checkbox" name="enable_telegram" checked>
+                        <div class="form-help">Receive trading alerts via Telegram</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Telegram Bot Token</label>
+                        <input type="password" class="form-input" name="telegram_bot_token" placeholder="Enter your Telegram Bot Token">
+                        <div class="form-help">Token for your Telegram bot</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Telegram Chat ID</label>
+                        <input type="text" class="form-input" name="telegram_chat_id" placeholder="Enter your Telegram Chat ID">
+                        <div class="form-help">Your Telegram chat ID for receiving notifications</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Notification Types</label>
+                        <div>
+                            <input type="checkbox" class="form-checkbox" name="notify_signals" checked> Trading Signals<br>
+                            <input type="checkbox" class="form-checkbox" name="notify_orders" checked> Order Executions<br>
+                            <input type="checkbox" class="form-checkbox" name="notify_errors" checked> Error Alerts<br>
+                            <input type="checkbox" class="form-checkbox" name="notify_summary"> Daily Summary
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="settings-card">
+                    <div class="settings-title">Alert Thresholds</div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Minimum Confidence for Alerts</label>
+                        <input type="number" class="form-input" name="alert_confidence" value="0.6" step="0.05" min="0.5" max="1.0">
+                        <div class="form-help">Minimum confidence level to send notifications</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Price Change Alert (%)</label>
+                        <input type="number" class="form-input" name="price_alert_threshold" value="5.0" step="0.5" min="1" max="20">
+                        <div class="form-help">Percentage price change to trigger alerts</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Volume Spike Alert (x)</label>
+                        <input type="number" class="form-input" name="volume_alert_threshold" value="3.0" step="0.5" min="1.5" max="10">
+                        <div class="form-help">Volume multiplier to trigger alerts</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Advanced Tab -->
+            <div class="tab-content" id="advanced-tab">
+                <div class="settings-card">
+                    <div class="settings-title">Machine Learning</div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Enable ML Predictions</label>
+                        <input type="checkbox" class="form-checkbox" name="enable_ml" checked>
+                        <div class="form-help">Use machine learning for price prediction</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">ML Model Confidence Weight</label>
+                        <input type="number" class="form-input" name="ml_weight" value="0.3" step="0.05" min="0" max="1">
+                        <div class="form-help">How much weight to give ML predictions in signal generation (0-1)</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Retrain Model Frequency (hours)</label>
+                        <input type="number" class="form-input" name="retrain_frequency" value="24" min="1" max="168">
+                        <div class="form-help">How often to retrain the ML model (in hours)</div>
+                    </div>
+                </div>
+                
+                <div class="settings-card">
+                    <div class="settings-title">Backtesting</div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Backtest Historical Period (days)</label>
+                        <input type="number" class="form-input" name="backtest_period" value="30" min="7" max="365">
+                        <div class="form-help">Number of days of historical data to use for backtesting</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Auto Backtest Frequency (hours)</label>
+                        <input type="number" class="form-input" name="backtest_frequency" value="24" min="1" max="168">
+                        <div class="form-help">How often to automatically run backtests (in hours)</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Backtest Initial Balance</label>
+                        <input type="number" class="form-input" name="backtest_balance" value="10000" step="100" min="1000">
+                        <div class="form-help">Initial balance to use for backtesting</div>
+                    </div>
+                </div>
+                
+                <div class="settings-card danger-zone">
+                    <div class="settings-title">Danger Zone</div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Reset All Settings</label>
+                        <button type="button" class="btn btn-danger" id="reset-settings">Reset to Defaults</button>
+                        <div class="form-help">Restore all settings to their default values</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Clear All Data</label>
+                        <button type="button" class="btn btn-danger" id="clear-data">Clear Cache & History</button>
+                        <div class="form-help">Delete all cached data and trading history</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Export/Import Settings</label>
+                        <div>
+                            <button type="button" class="btn btn-warning" id="export-settings">Export Settings</button>
+                            <button type="button" class="btn btn-warning" id="import-settings">Import Settings</button>
+                        </div>
+                        <div class="form-help">Backup or restore your configuration</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="action-buttons">
+                <button type="button" class="btn btn-primary" id="save-settings">Save Settings</button>
+                <button type="button" class="btn" id="cancel-changes">Cancel</button>
+            </div>
+        </form>
+    </div>
+    {% endblock %}
+
+    {% block scripts %}
+    <script>
+        // Tab switching functionality
+        $('.tab-button').on('click', function() {
+            const tabId = $(this).data('tab');
+            
+            // Update active tab
+            $('.tab-button').removeClass('active');
+            $(this).addClass('active');
+            
+            // Show corresponding content
+            $('.tab-content').removeClass('active');
+            $(`#${tabId}-tab`).addClass('active');
+        });
+
+        // Symbol management
+        $('#add-symbol').on('click', function() {
+            const newSymbol = $('#new-symbol').val().trim().toUpperCase();
+            if (newSymbol && !$('#symbols-list').text().includes(newSymbol)) {
+                $('#symbols-list').append(`<div class="symbol-tag">${newSymbol}<span class="symbol-tag-remove">×</span></div>`);
+                $('#new-symbol').val('');
+            }
+        });
+
+        // Timeframe management
+        $('#add-timeframe').on('click', function() {
+            const newTimeframe = $('#new-timeframe').val().trim().toLowerCase();
+            if (newTimeframe && !$('#timeframes-list').text().includes(newTimeframe)) {
+                $('#timeframes-list').append(`<div class="symbol-tag">${newTimeframe}<span class="symbol-tag-remove">×</span></div>`);
+                $('#new-timeframe').val('');
+            }
+        });
+
+        // Remove symbol/timeframe
+        $(document).on('click', '.symbol-tag-remove', function() {
+            $(this).parent().remove();
+        });
+
+        // Load current settings
+        function loadSettings() {
+            $.get('/api/settings', function(response) {
+                if (response.success) {
+                    const settings = response.settings;
+                    
+                    // Populate form fields
+                    $.each(settings, function(key, value) {
+                        const input = $(`[name="${key}"]`);
+                        if (input.length) {
+                            if (input.attr('type') === 'checkbox') {
+                                input.prop('checked', value);
+                            } else {
+                                input.val(value);
+                            }
+                        }
+                    });
+                    
+                    // Populate symbols and timeframes
+                    if (settings.symbols) {
+                        $('#symbols-list').empty();
+                        settings.symbols.split(',').forEach(symbol => {
+                            if (symbol.trim()) {
+                                $('#symbols-list').append(`<div class="symbol-tag">${symbol.trim()}<span class="symbol-tag-remove">×</span></div>`);
+                            }
+                        });
+                    }
+                    
+                    if (settings.timeframes) {
+                        $('#timeframes-list').empty();
+                        settings.timeframes.split(',').forEach(tf => {
+                            if (tf.trim()) {
+                                $('#timeframes-list').append(`<div class="symbol-tag">${tf.trim()}<span class="symbol-tag-remove">×</span></div>`);
+                            }
+                        });
+                    }
+                    
+                    showStatus('Settings loaded successfully', 'success');
+                } else {
+                    showStatus('Error loading settings: ' + response.error, 'error');
+                }
+            }).fail(function() {
+                showStatus('Error connecting to server', 'error');
+            });
+        }
+
+        // Save settings
+        $('#save-settings').on('click', function() {
+            // Collect symbols and timeframes
+            const symbols = [];
+            $('#symbols-list .symbol-tag').each(function() {
+                symbols.push($(this).text().replace('×', '').trim());
+            });
+            
+            const timeframes = [];
+            $('#timeframes-list .symbol-tag').each(function() {
+                timeframes.push($(this).text().replace('×', '').trim());
+            });
+            
+            // Create form data
+            const formData = $('#settings-form').serializeArray();
+            formData.push({name: 'symbols', value: symbols.join(',')});
+            formData.push({name: 'timeframes', value: timeframes.join(',')});
+            
+            // Send to server
+            $.post('/api/settings', formData, function(response) {
+                if (response.success) {
+                    showStatus('Settings saved successfully', 'success');
+                } else {
+                    showStatus('Error saving settings: ' + response.error, 'error');
+                }
+            }).fail(function() {
+                showStatus('Error connecting to server', 'error');
+            });
+        });
+
+        // Reset settings
+        $('#reset-settings').on('click', function() {
+            if (confirm('Are you sure you want to reset all settings to default values?')) {
+                $.post('/api/settings/reset', function(response) {
+                    if (response.success) {
+                        showStatus('Settings reset to defaults', 'success');
+                        loadSettings(); // Reload the default settings
+                    } else {
+                        showStatus('Error resetting settings: ' + response.error, 'error');
+                    }
+                }).fail(function() {
+                    showStatus('Error connecting to server', 'error');
+                });
+            }
+        });
+
+        // Clear data
+        $('#clear-data').on('click', function() {
+            if (confirm('Are you sure you want to clear all cached data and history? This cannot be undone.')) {
+                $.post('/api/cache/clear', function(response) {
+                    if (response.success) {
+                        showStatus('All data cleared successfully', 'success');
+                    } else {
+                        showStatus('Error clearing data: ' + response.error, 'error');
+                    }
+                }).fail(function() {
+                    showStatus('Error connecting to server', 'error');
+                });
+            }
+        });
+
+        // Export settings
+        $('#export-settings').on('click', function() {
+            $.get('/api/settings/export', function(response) {
+                if (response.success) {
+                    // Create download link
+                    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(response.settings, null, 2));
+                    const downloadAnchorNode = document.createElement('a');
+                    downloadAnchorNode.setAttribute("href", dataStr);
+                    downloadAnchorNode.setAttribute("download", "bot-settings.json");
+                    document.body.appendChild(downloadAnchorNode);
+                    downloadAnchorNode.click();
+                    downloadAnchorNode.remove();
+                    
+                    showStatus('Settings exported successfully', 'success');
+                } else {
+                    showStatus('Error exporting settings: ' + response.error, 'error');
+                }
+            }).fail(function() {
+                showStatus('Error connecting to server', 'error');
+            });
+        });
+
+        // Import settings
+        $('#import-settings').on('click', function() {
+            // Create file input
+            const fileInput = document.createElement('input');
+            fileInput.type = 'file';
+            fileInput.accept = '.json';
+            fileInput.onchange = function(e) {
+                const file = e.target.files[0];
+                const reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    try {
+                        const settings = JSON.parse(e.target.result);
+                        
+                        // Send to server
+                        $.post('/api/settings/import', {settings: JSON.stringify(settings)}, function(response) {
+                            if (response.success) {
+                                showStatus('Settings imported successfully', 'success');
+                                loadSettings(); // Reload the new settings
+                            } else {
+                                showStatus('Error importing settings: ' + response.error, 'error');
+                            }
+                        }).fail(function() {
+                            showStatus('Error connecting to server', 'error');
+                        });
+                    } catch (error) {
+                        showStatus('Error parsing settings file: ' + error, 'error');
+                    }
+                };
+                
+                reader.readAsText(file);
+            };
+            
+            fileInput.click();
+        });
+
+        // Cancel changes
+        $('#cancel-changes').on('click', function() {
+            loadSettings();
+        });
+
+        // Show status message
+        function showStatus(message, type) {
+            const statusEl = $('#status-message');
+            statusEl.removeClass('status-success status-error status-warning').addClass(`status-${type}`);
+            statusEl.text(message).fadeIn();
+            
+            setTimeout(function() {
+                statusEl.fadeOut();
+            }, 5000);
+        }
+
+        // Load settings when page is ready
+        $(document).ready(function() {
+            loadSettings();
+        });
+    </script>
+    {% endblock %}
+</body>
+</html>
