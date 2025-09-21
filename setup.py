@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """
 Setup script for BingX Trading Bot package.
-This script handles installation, dependency management, and package distribution.
 """
 
 import os
@@ -11,9 +10,8 @@ from pathlib import Path
 
 # Check Python version
 if sys.version_info < (3, 8):
-    sys.exit("Python 3.8 or later is required. Please upgrade your Python installation.")
+    sys.exit("Python 3.8 or later is required.")
 
-# Read the contents of README.md
 def read_long_description():
     try:
         with open("README.md", "r", encoding="utf-8") as f:
@@ -21,22 +19,19 @@ def read_long_description():
     except FileNotFoundError:
         return "BingX Trading Bot - Advanced algorithmic trading system for BingX exchange"
 
-# Read requirements from requirements.txt
 def read_requirements():
     requirements_path = Path(__file__).parent / "requirements.txt"
     with open(requirements_path, "r", encoding="utf-8") as f:
         return [line.strip() for line in f if line.strip() and not line.startswith("#")]
 
-# Get package version
 def get_version():
-    version_path = Path(__file__).parent / "src" / "version.py"
+    version_path = Path(__file__).parent / "src" / "init.py"
     with open(version_path, "r", encoding="utf-8") as f:
         for line in f:
             if line.startswith("__version__"):
                 return line.split("=")[1].strip().strip('"\'')
     return "0.1.0"
 
-# Setup configuration
 setup(
     name="bingx-trading-bot",
     version=get_version(),
@@ -103,6 +98,7 @@ setup(
     package_data={
         "bingx_trading_bot": [
             "config/*.py",
+            "config/*.conf",
             "config/*.encrypted",
             "web/templates/*.html",
             "web/static/css/*.css",

@@ -1,0 +1,34 @@
+# .gitignore
+
+# Environment variables
+.env
+.env.production
+
+# Python compiled files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Log files
+logs/
+*.log
+
+# Data and cache
+data/
+.cache/
+
+# Distribution and packaging
+dist/
+build/
+*.egg-info/
+
+# Virtual environments
+venv/
+env/

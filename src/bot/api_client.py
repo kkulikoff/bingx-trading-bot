@@ -1,7 +1,7 @@
 """
-Модуль для работы с API BingX.
-Обеспечивает безопасное взаимодействие с биржевым API.
+Модуль для работы с API BingX с исправлениями для реального API.
 """
+
 import aiohttp
 import asyncio
 import time
@@ -11,24 +11,23 @@ import urllib.parse
 from typing import Dict, List, Optional, Any
 import logging
 
-from src.config.settings import BINGX_API_KEY, BINGX_SECRET_KEY, REQUEST_TIMEOUT, API_RATE_LIMIT
-from src.utils.logger import setup_logging
+from config.settings import BINGX_API_KEY, BINGX_SECRET_KEY, REQUEST_TIMEOUT, API_RATE_LIMIT
+from utils.logger import setup_logging
 
 logger = setup_logging(__name__)
 
 class BingXAPI:
-    """Класс для работы с API BingX с улучшенной безопасностью"""
+    """Класс для работы с API BingX с исправленными эндпоинтами"""
     
-    def __init__(self):
-        self.api_key = BINGX_API_KEY
-        self.secret_key = BINGX_SECRET_KEY
+    def __init__(self, api_key: str = None, secret_key: str = None):
+        self.api_key = api_key or BINGX_API_KEY
+        self.secret_key = secret_key or BINGX_SECRET_KEY
         self.session = None
         self.last_request_time = 0
         self.request_count = 0
         self.reset_time = time.time()
         self.base_url = "https://open-api.bingx.com"
-        self.api_path = "/openApi"
-
+        
     async def initialize(self):
         """Инициализация API клиента"""
         try:
@@ -39,7 +38,7 @@ class BingXAPI:
             raise
 
     async def _rate_limit(self):
-        """Ограничение частоты запросов для соблюдения лимитов API"""
+        """Ограничение частоты запросов"""
         current_time = time.time()
         elapsed = current_time - self.reset_time
         
@@ -75,32 +74,34 @@ class BingXAPI:
         ).hexdigest()
         return signature
 
-    async def _make_request(self, method: str, endpoint: str, params: Dict[str, Any] = None, signed: bool = False) -> Optional[Dict[str, Any]]:
+    async def _make_request(self, method: str, endpoint: str, 
+                          params: Dict[str, Any] = None, 
+                          signed: bool = False) -> Optional[Dict[str, Any]]:
         """Выполнение запроса к API BingX"""
         await self._rate_limit()
         
         try:
-            url = f"{self.base_url}{self.api_path}{endpoint}"
-            
-            if signed:
-                if params is None:
-                    params = {}
-                params['timestamp'] = int(time.time() * 1000)
-                params['signature'] = self._generate_signature(params)
+            url = f"{self.base_url}{endpoint}"
             
             headers = {
                 'X-BX-APIKEY': self.api_key,
-                'User-Agent': 'BingX-Trading-Bot/1.0'
+                'User-Agent': 'BingX-Trading-Bot/1.0',
+                'Content-Type': 'application/json'
             }
             
             timeout = aiohttp.ClientTimeout(total=REQUEST_TIMEOUT)
+            
+            if signed and params:
+                params['timestamp'] = int(time.time() * 1000)
+                params['signature'] = self._generate_signature(params)
+            
             logger.debug(f"API Request: {method} {url}, params: {params}")
             
             if method == 'GET':
                 async with self.session.get(url, params=params, headers=headers, timeout=timeout) as response:
                     return await self._process_response(response, url, params)
             elif method == 'POST':
-                async with self.session.post(url, params=params, headers=headers, timeout=timeout) as response:
+                async with self.session.post(url, json=params, headers=headers, timeout=timeout) as response:
                     return await self._process_response(response, url, params)
             elif method == 'DELETE':
                 async with self.session.delete(url, params=params, headers=headers, timeout=timeout) as response:
@@ -119,20 +120,18 @@ class BingXAPI:
             data = await response.json()
             
             # Логирование запроса (без секретных данных)
-            safe_params = {k: v for k, v in params.items() if k not in ['signature', 'apiKey', 'secretKey']}
-            logger.info(f"API Request: {url}, Params: {safe_params}, Status: {response.status}")
+            safe_params = {k: v for k, v in (params or {}).items() 
+                         if k not in ['signature', 'apiKey', 'secretKey']}
+            logger.info(f"API Request: {url}, Status: {response.status}")
             
-            # Проверка статуса ответа
             if response.status != 200:
                 logger.error(f"Ошибка API: статус {response.status}, ответ: {data}")
                 return None
             
-            # Проверка структуры ответа
             if not isinstance(data, dict):
                 logger.error(f"Некорректный формат ответа: {data}")
                 return None
             
-            # Проверка кода ошибки в ответе
             if 'code' in data and data['code'] != 0:
                 logger.error(f"Ошибка API: код {data['code']}, сообщение: {data.get('msg', 'Нет сообщения')}")
                 return None
@@ -144,14 +143,15 @@ class BingXAPI:
             return None
 
     async def get_account_balance(self) -> Optional[Dict[str, Any]]:
-        """Получение баланса аккаунта"""
-        endpoint = "/spot/v1/account/balance"
-        params = {}
+        """Получение баланса аккаунта - исправленный эндпоинт"""
+        endpoint = "/openApi/spot/v1/account/balance"
+        params = {'timestamp': int(time.time() * 1000)}
+        params['signature'] = self._generate_signature(params)
         return await self._make_request('GET', endpoint, params, signed=True)
 
     async def get_klines(self, symbol: str, interval: str, limit: int = 500) -> Optional[Dict[str, Any]]:
-        """Получение исторических данных (свечи)"""
-        endpoint = "/spot/v1/market/kline"
+        """Получение исторических данных (свечи) - исправленный эндпоинт"""
+        endpoint = "/openApi/spot/v1/market/kline"
         params = {
             'symbol': symbol,
             'interval': interval,
@@ -159,45 +159,57 @@ class BingXAPI:
         }
         return await self._make_request('GET', endpoint, params)
 
-    async def place_order(self, symbol: str, side: str, quantity: float, price: Optional[float] = None, order_type: str = "MARKET") -> Optional[Dict[str, Any]]:
-        """Размещение ордера"""
-        endpoint = "/spot/v1/trade/order"
+    async def place_order(self, symbol: str, side: str, quantity: float, 
+                        price: Optional[float] = None, order_type: str = "MARKET") -> Optional[Dict[str, Any]]:
+        """Размещение ордера - исправленный эндпоинт"""
+        endpoint = "/openApi/spot/v1/trade/order"
+        
         params = {
             'symbol': symbol,
-            'side': side,
-            'type': order_type,
-            'quantity': quantity
+            'side': side.upper(),
+            'type': order_type.upper(),
+            'quantity': quantity,
+            'timestamp': int(time.time() * 1000)
         }
-        if price is not None:
+        
+        if price is not None and order_type.upper() == "LIMIT":
             params['price'] = price
+        
+        params['signature'] = self._generate_signature(params)
         
         return await self._make_request('POST', endpoint, params, signed=True)
 
     async def get_open_orders(self, symbol: Optional[str] = None) -> Optional[Dict[str, Any]]:
-        """Получение списка открытых ордеров"""
-        endpoint = "/spot/v1/trade/openOrders"
-        params = {}
+        """Получение списка открытых ордеров - исправленный эндпоинт"""
+        endpoint = "/openApi/spot/v1/trade/openOrders"
+        params = {'timestamp': int(time.time() * 1000)}
+        
         if symbol:
             params['symbol'] = symbol
         
+        params['signature'] = self._generate_signature(params)
         return await self._make_request('GET', endpoint, params, signed=True)
 
     async def cancel_order(self, symbol: str, order_id: str) -> Optional[Dict[str, Any]]:
-        """Отмена ордера"""
-        endpoint = "/spot/v1/trade/cancel"
+        """Отмена ордера - исправленный эндпоинт"""
+        endpoint = "/openApi/spot/v1/trade/cancel"
         params = {
             'symbol': symbol,
-            'orderId': order_id
+            'orderId': order_id,
+            'timestamp': int(time.time() * 1000)
         }
+        params['signature'] = self._generate_signature(params)
         return await self._make_request('DELETE', endpoint, params, signed=True)
 
     async def get_order_status(self, symbol: str, order_id: str) -> Optional[Dict[str, Any]]:
-        """Проверка статуса ордера"""
-        endpoint = "/spot/v1/trade/query"
+        """Проверка статуса ордера - исправленный эндпоинт"""
+        endpoint = "/openApi/spot/v1/trade/query"
         params = {
             'symbol': symbol,
-            'orderId': order_id
+            'orderId': order_id,
+            'timestamp': int(time.time() * 1000)
         }
+        params['signature'] = self._generate_signature(params)
         return await self._make_request('GET', endpoint, params, signed=True)
 
     async def get_historical_data(self, symbol: str, interval: str, limit: int = 500) -> Optional[List[Dict[str, Any]]]:

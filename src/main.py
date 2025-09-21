@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """
 Main entry point for BingX Trading Bot.
-This module initializes and runs the complete trading system.
 """
 
 import asyncio
@@ -14,28 +13,24 @@ from typing import Optional
 # Add src directory to Python path
 sys.path.insert(0, str(Path(__file__).parent))
 
-from src.utils.logger import setup_logging
-from src.bot.core import AdvancedBingXBot
-from src.web.app import create_app
-from src.data.cache import init_cache, close_cache
-from src.data.database import init_db
-from src.utils.prometheus_metrics import start_prometheus_server
+# Correct imports without src prefix
+from utils.logger import setup_logging
+from bot.core import AdvancedBingXBot
+from data.cache import init_cache, close_cache
+from data.database import init_db
+from utils.prometheus_metrics import start_prometheus_server
 
 # Global variables
 bot: Optional[AdvancedBingXBot] = None
-web_app = None
 logger = logging.getLogger(__name__)
 
 def handle_exception(exc_type, exc_value, exc_traceback):
     """Global exception handler for uncaught exceptions"""
     if issubclass(exc_type, KeyboardInterrupt):
-        # Don't log keyboard interrupts
         sys.__excepthook__(exc_type, exc_value, exc_traceback)
         return
     
     logger.critical("Uncaught exception", exc_info=(exc_type, exc_value, exc_traceback))
-    
-    # Try to gracefully shutdown
     asyncio.run(shutdown())
 
 # Set global exception handler
@@ -43,7 +38,7 @@ sys.excepthook = handle_exception
 
 async def startup():
     """Initialize the trading bot application"""
-    global bot, web_app
+    global bot
     
     try:
         # Setup logging
@@ -62,10 +57,6 @@ async def startup():
         bot = AdvancedBingXBot()
         await bot.initialize()
         logger.info("Trading bot initialized")
-        
-        # Create web application
-        web_app = create_app(bot)
-        logger.info("Web application initialized")
         
         # Start Prometheus metrics server
         start_prometheus_server(9090)
@@ -99,7 +90,6 @@ async def run():
                 
             except Exception as e:
                 logger.error(f"Error in main loop: {e}", exc_info=True)
-                # Continue running despite errors
                 await asyncio.sleep(5)
                 
     except KeyboardInterrupt:
@@ -125,14 +115,12 @@ async def shutdown():
         close_cache()
         logger.info("Cache closed")
         
-        # Any other cleanup tasks
         logger.info("Cleanup completed")
         
     except Exception as e:
         logger.error(f"Error during shutdown: {e}", exc_info=True)
     finally:
         logger.info("BingX Trading Bot shutdown complete")
-        # Exit the application
         sys.exit(0)
 
 def handle_signal(signum, frame):
